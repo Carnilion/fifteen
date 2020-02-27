@@ -2,10 +2,10 @@ package com.company;
 
 import java.util.Arrays;
 
-public class Puzzle implements  Cloneable{
+public class Puzzle implements Cloneable {
 
-    int[][] tab = new int[4][4];
-
+    public static final int SIZE_OF_MATRIX = 4;
+    int[][] tab = new int[SIZE_OF_MATRIX][SIZE_OF_MATRIX];
     public int[][] getTab() {
         return tab;
     }
@@ -14,35 +14,41 @@ public class Puzzle implements  Cloneable{
         this.tab = tab;
     }
 
-    public static Puzzle solution() {
 
-        Puzzle p = new Puzzle();
-        p.getTab()[0][0] = 15;
-        p.getTab()[0][1] = 11;
-        p.getTab()[0][2] = 7;
-        p.getTab()[0][3] = 3;
-        p.getTab()[1][0] = 14;
-        p.getTab()[1][1] = 10;
-        p.getTab()[1][2] = 0;
-        p.getTab()[1][3] = 1;
-        p.getTab()[2][0] = 9;
-        p.getTab()[2][1] = 6;
-        p.getTab()[2][2] = 5;
-        p.getTab()[2][3] = 2;
-        p.getTab()[3][0] = 13;
-        p.getTab()[3][1] = 12;
-        p.getTab()[3][2] = 8;
-        p.getTab()[3][3] = 4;
+    /**
+     * the function checks the solvability of a given configuration
+     * @return
+     */
+    public boolean isSolvable(){
+        int countInversions = 0;
+        int[] tiles = new int[SIZE_OF_MATRIX * SIZE_OF_MATRIX];
 
-        return p;
+        int pozitonInTheTile = 0;
+        for (int i=0;i<SIZE_OF_MATRIX;i++){
+            for (int j=0;j<SIZE_OF_MATRIX;j++){
+                tiles[pozitonInTheTile] = tab[j][i];
+                pozitonInTheTile++;
+            }
+        }
+
+        for (int i = 0; i < SIZE_OF_MATRIX * SIZE_OF_MATRIX-1; i++) {
+            for (int j = 0; j < i; j++) {
+                if (tiles[j] > tiles[i])
+                    countInversions++;
+            }
+        }
+        return countInversions % 2 == 0;
     }
 
+    /**
+     * each movement function changes the configuration by a given movement
+     */
     public void moveUp() {
 
         int k = -1, l = -1;
 
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
+        for (int i = 0; i < SIZE_OF_MATRIX; i++) {
+            for (int j = 0; j < SIZE_OF_MATRIX; j++) {
                 if (this.tab[i][j] == 0) {
                     k = i;
                     l = j;
@@ -54,13 +60,12 @@ public class Puzzle implements  Cloneable{
             swap(k, l - 1, k, l);
         }
     }
-
     public void moveDown() {
 
         int k = -1, l = -1;
 
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
+        for (int i = 0; i < SIZE_OF_MATRIX; i++) {
+            for (int j = 0; j < SIZE_OF_MATRIX; j++) {
                 if (this.tab[i][j] == 0) {
                     k = i;
                     l = j;
@@ -68,17 +73,16 @@ public class Puzzle implements  Cloneable{
             }
         }
 
-        if (l < 3) {
+        if (l < SIZE_OF_MATRIX - 1) {
             swap(k, l + 1, k, l);
         }
     }
-
     public void moveLeft() {
 
         int k = -1, l = -1;
 
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
+        for (int i = 0; i < SIZE_OF_MATRIX;  i++) {
+            for (int j = 0; j < SIZE_OF_MATRIX; j++) {
                 if (this.tab[i][j] == 0) {
                     k = i;
                     l = j;
@@ -90,13 +94,12 @@ public class Puzzle implements  Cloneable{
             swap(k - 1, l, k, l);
         }
     }
-
     public void moveRight() {
 
         int k = -1, l = -1;
 
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
+        for (int i = 0; i < SIZE_OF_MATRIX; i++) {
+            for (int j = 0; j < SIZE_OF_MATRIX; j++) {
                 if (this.tab[i][j] == 0) {
                     k = i;
                     l = j;
@@ -104,90 +107,25 @@ public class Puzzle implements  Cloneable{
             }
         }
 
-        if (k < 3) {
+        if (k < SIZE_OF_MATRIX - 1) {
             swap(k + 1, l, k, l);
         }
     }
 
-
-    Move lastMove = Move.EMPTY;
-
-    public void solve() {
-
-        int columnOfGapTile = -1, rowOfGapTile = -1;
-
-        // set Gap tile
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                if (this.tab[i][j] == 0) {
-                    columnOfGapTile = i;
-                    rowOfGapTile = j;
-                }
-            }
-        }
-
-        //Up
-        if (!this.equals(Puzzle.solution())) {
-            if (rowOfGapTile > 0 && lastMove != Move.DOWN) {
-                System.out.println("Up");
-                moveUp();
-                lastMove = Move.UP;
-                print();
-                solve();
-            }
-        }
-
-        //Down
-        if (!this.equals(Puzzle.solution())) {
-            if (rowOfGapTile < 3 && lastMove != Move.UP) {
-                System.out.println("Down");
-                moveDown();
-                lastMove = Move.DOWN;
-                print();
-                solve();
-            }
-        }
-
-        //Left
-        if (!this.equals(Puzzle.solution())) {
-            if (columnOfGapTile > 0 && lastMove != Move.RIGHT) {
-                System.out.println("Left");
-                moveLeft();
-                lastMove = Move.LEFT;
-                print();
-                solve();
-            }
-        }
-
-        //Right
-        if (!this.equals(Puzzle.solution())) {
-            if (columnOfGapTile < 3 && lastMove != Move.LEFT) {
-                System.out.println("Right");
-                moveRight();
-                lastMove = Move.RIGHT;
-                print();
-                solve();
-            }
-        }
-
-
-    }
-
     @Override
-    public Puzzle clone() throws CloneNotSupportedException{
+    public Puzzle clone() throws CloneNotSupportedException {
         Puzzle puzzle = (Puzzle) super.clone();
-        int[][] t = new int[4][4];
+        int[][] newCloneMatrix = new int[SIZE_OF_MATRIX][SIZE_OF_MATRIX];
 
-        for(int  i = 0 ; i < 4; i++){
-            for(int j = 0 ; j<4 ; j++){
-                t[i][j] = tab.clone()[i][j];
+        for (int i = 0; i < SIZE_OF_MATRIX; i++) {
+            for (int j = 0; j < SIZE_OF_MATRIX; j++) {
+                newCloneMatrix[i][j] = tab.clone()[i][j];
             }
         }
 
-        puzzle.setTab(t);
+        puzzle.setTab(newCloneMatrix);
         return puzzle;
     }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -195,8 +133,8 @@ public class Puzzle implements  Cloneable{
         //       Puzzle puzzle = (Puzzle) o;
 
         boolean lastAttempt = true;
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
+        for (int i = 0; i < SIZE_OF_MATRIX; i++) {
+            for (int j = 0; j < SIZE_OF_MATRIX; j++) {
                 if (this.getTab()[i][j] != ((Puzzle) o).getTab()[i][j]) {
                     lastAttempt = false;
                 }
@@ -205,21 +143,18 @@ public class Puzzle implements  Cloneable{
         return lastAttempt;
         //return Arrays.equals(tab, puzzle.tab);
     }
-
     @Override
     public int hashCode() {
         return Arrays.hashCode(tab);
     }
-
-    private void swap(int columnOfTheFirstTile, int rowOfTheFirstTile, int columnOfTheSecondTile, int rowOfTheSecondTile) {
-        int o = this.tab[columnOfTheFirstTile][rowOfTheFirstTile];
+    public void swap(int columnOfTheFirstTile, int rowOfTheFirstTile, int columnOfTheSecondTile, int rowOfTheSecondTile) {
+        int temporaryValue = this.tab[columnOfTheFirstTile][rowOfTheFirstTile];
         this.tab[columnOfTheFirstTile][rowOfTheFirstTile] = this.tab[columnOfTheSecondTile][rowOfTheSecondTile];
-        this.tab[columnOfTheSecondTile][rowOfTheSecondTile] = o;
+        this.tab[columnOfTheSecondTile][rowOfTheSecondTile] = temporaryValue;
     }
-
     public void print() {
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
+        for (int i = 0; i < SIZE_OF_MATRIX; i++) {
+            for (int j = 0; j < SIZE_OF_MATRIX; j++) {
                 System.out.print(this.tab[j][i] + "\t");
             }
             System.out.println();

@@ -1,17 +1,26 @@
 package com.company;
 
-public class Node {
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Random;
 
-    Move move;
-    Puzzle puz;
+public class Node {
+    public Puzzle puz;
+
+    Node previous;
+    Move lastMove;
 
     Node left;
     Node right;
     Node up;
     Node down;
 
-    Node(Puzzle puz) {
+    public Node(Puzzle puz) {
+        nodeList.add(this);
         this.puz = puz;
+
+        previous = null;
+        lastMove = Move.EMPTY;
         left = null;
         right = null;
         up = null;
@@ -19,94 +28,173 @@ public class Node {
     }
 
 
-    public Node add(Node current, Move move) throws CloneNotSupportedException {
-        if (current == null) {
-            return new Node(current.puz);
-        }
+    /**
+     * The function accepts the argument as a puzzle and returns Puzzles, which are puzzles after 15 moves. Each of the 15 moves
+     * has to bring some change, but they can mutually neutralize. Upward movement is permitted and later downward
+     * @param puzzle
+     * @return
+     * @throws CloneNotSupportedException
+     */
+    public static Puzzle shufflePuzzle(Puzzle puzzle) throws CloneNotSupportedException {
 
-        Puzzle p = current.puz.clone();
+        Puzzle puzzleClone = puzzle.clone();
 
-        if (move == Move.UP) {
-            p.moveUp();
-            if (!p.equals(current.puz)) {
-                current.up = new Node(p); //addRecursive(current.up, ); //new Node(p);
+        Random randomDirection = new Random();
+        int moveDirection;
+        for (int i = 0; i < 15; i++) {
+            moveDirection = randomDirection.nextInt(4);
+            Puzzle puzzleCloneTemporary;
+            switch (moveDirection) {
+                case 0:
+                    puzzleCloneTemporary = puzzleClone.clone();
+                    puzzleCloneTemporary.moveUp();
+                    if (!puzzleCloneTemporary.equals(puzzleClone)) {
+                        puzzleClone = puzzleCloneTemporary;
+                    } else {
+                        i = i - 1;
+                    }
+                    break;
+                case 1:
+                    puzzleCloneTemporary = puzzleClone.clone();
+                    puzzleCloneTemporary.moveDown();
+                    if (!puzzleCloneTemporary.equals(puzzleClone)) {
+                        puzzleClone = puzzleCloneTemporary;
+                    } else {
+                        i = i - 1;
+                    }
+                    break;
+                case 2:
+                    puzzleCloneTemporary = puzzleClone.clone();
+                    puzzleCloneTemporary.moveLeft();
+                    if (!puzzleCloneTemporary.equals(puzzleClone)) {
+                        puzzleClone = puzzleCloneTemporary;
+                    } else {
+                        i = i - 1;
+                    }
+                    break;
+                case 3:
+                    puzzleCloneTemporary = puzzleClone.clone();
+                    puzzleCloneTemporary.moveRight();
+                    if (!puzzleCloneTemporary.equals(puzzleClone)) {
+                        puzzleClone = puzzleCloneTemporary;
+                    } else {
+                        i = i - 1;
+                    }
+                    break;
+                default:
+                    break;
+
+
             }
         }
-        if (move == Move.DOWN) {
-            p.moveDown();
-            if (!p.equals(current.puz)) {
-                current.down = new Node(p);
-            }
-        }
-        if (move == Move.LEFT) {
-            p.moveLeft();
-            if (!p.equals(current.puz)) {
-                current.left = new Node(p);
-            }
-        }
-        if (move == Move.RIGHT) {
-            p.moveRight();
-            if (!p.equals(current.puz)) {
-                current.right = new Node(p);
-            }
-        }
-
-
-        return current;
+        return puzzleClone;
     }
 
-    public static void traverseInOrder(Node node) {
-        if (node != null) {
-            traverseInOrder(node.up);
-            traverseInOrder(node.down);
-            traverseInOrder(node.left);
-            traverseInOrder(node.right);
-            node.puz.print();
+    public static ArrayList<Move> listOfMoves = new ArrayList<Move>();
 
+
+    /**
+     * @param node
+     * the function saves moves to listOfMoves from initial configuration to the configuration in the current node
+     */
+    public static void writeTolistOfMoves(Node node) {
+        if (node.lastMove != Move.EMPTY) {
+            listOfMoves.add(node.lastMove);
+        }
+        if (node.previous != null) {
+            writeTolistOfMoves(node.previous);
         }
     }
 
-    public static void add(Node root) throws CloneNotSupportedException {
+    public static HashSet<Node> temporaryNode = new HashSet<Node>();
+    public static HashSet<Node> nodeList = new HashSet<Node>();
+
+
+    public Puzzle puzzleAfterMove(Node root, Move move) throws CloneNotSupportedException {
+        Puzzle puzzleClone = root.puz.clone();
+        if (move == Move.LEFT)
+            puzzleClone.moveLeft();
+        if (move == Move.RIGHT)
+            puzzleClone.moveRight();
+        if (move == Move.UP)
+            puzzleClone.moveUp();
+        if (move == Move.DOWN)
+            puzzleClone.moveDown();
+
+        return puzzleClone;
+    }
+
+    public void add(Node root) throws CloneNotSupportedException {
         if (root != null) {
+            nodeList.add(root);
             add(root.up);
             add(root.down);
             add(root.left);
             add(root.right);
-            Puzzle puzzleLeft = root.puz.clone();
-            Puzzle puzzleRight = root.puz.clone();
-            Puzzle puzzleUp = root.puz.clone();
-            Puzzle puzzleDown = root.puz.clone();
-            puzzleLeft.moveLeft();
-            puzzleRight.moveRight();
-            puzzleDown.moveDown();
-            puzzleUp.moveUp();
-            if (root.left == null && !puzzleLeft.equals(root.puz) && isNotRepeated(root, puzzleLeft)) { //nie dziala bo sprawdzamy powtorzenia tylko od miejsca wystapienia, nie od korzenia, czyli sprawdzamy z synami
-                root.left = new Node(puzzleLeft);
+
+            Puzzle puzzleLeft = puzzleAfterMove(root,Move.LEFT);
+            Puzzle puzzleRight = puzzleAfterMove(root,Move.RIGHT);
+            Puzzle puzzleUp = puzzleAfterMove(root,Move.UP);
+            Puzzle puzzleDown = puzzleAfterMove(root,Move.DOWN);
+
+            if (root.left == null && !puzzleLeft.equals(root.puz)) {
+                boolean save = true;
+                for (Node n : nodeList) {
+                    if (n.puz.equals(puzzleLeft)) {
+                        save = false;
+                        break;
+                    }
+                }
+                if (save) {
+                    root.left = new Node(puzzleLeft);
+                    root.left.previous = root;
+                    root.left.lastMove = Move.LEFT;
+                }
             }
-            if (root.right == null && !puzzleRight.equals(root.puz) && isNotRepeated(root, puzzleRight)) {
-                root.right = new Node(puzzleRight);
+            if (root.right == null && !puzzleRight.equals(root.puz)) {
+                boolean save = true;
+                for (Node n : nodeList) {
+                    if (n.puz.equals(puzzleRight)) {
+                        save = false;
+                        break;
+                    }
+                }
+                if (save) {
+                    root.right = new Node(puzzleRight);
+                    root.right.previous = root;
+                    root.right.lastMove = Move.RIGHT;
+                }
             }
-            if (root.up == null && !puzzleUp.equals(root.puz) && isNotRepeated(root, puzzleUp)) {
-                root.up = new Node(puzzleUp);
+            if (root.up == null && !puzzleUp.equals(root.puz)) {
+                boolean save = true;
+                for (Node n : nodeList) {
+                    if (n.puz.equals(puzzleUp)) {
+                        save = false;
+                        break;
+                    }
+                }
+                if (save) {
+                    root.up = new Node(puzzleUp);
+                    root.up.previous = root;
+                    root.up.lastMove = Move.UP;
+                }
             }
-            if (root.down == null && !puzzleDown.equals(root.puz) && isNotRepeated(root, puzzleDown)) {
-                root.down = new Node(puzzleDown);
+            if (root.down == null && !puzzleDown.equals(root.puz)) {
+                boolean save = true;
+                for (Node n : nodeList) {
+                    if (n.puz.equals(puzzleDown)) {
+                        save = false;
+                        break;
+                    }
+                }
+                if (save) {
+                    root.down = new Node(puzzleDown);
+                    root.down.previous = root;
+                    root.down.lastMove = Move.DOWN;
+                }
             }
 
         }
-    }
 
-    public static boolean isNotRepeated(Node node, Puzzle puzz) {
-
-        if (node != null) {
-            if (node.puz.equals(puzz)) {
-                return false;
-            }
-            isNotRepeated(node.right, puzz);
-            isNotRepeated(node.left, puzz);
-            isNotRepeated(node.up, puzz);
-            isNotRepeated(node.down, puzz);
-        }
-        return true;
     }
 }
