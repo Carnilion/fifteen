@@ -1,5 +1,3 @@
-package com.company;
-
 public class ArchiwumClass {
 
     //once used functions, now redundant
