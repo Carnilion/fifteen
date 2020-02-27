@@ -1,12 +1,15 @@
 package com.company;
 
+import java.io.IOException;
+
 public class Main {
 
-    public static void main(String[] args) throws CloneNotSupportedException {
+    public static void main(String[] args) throws CloneNotSupportedException, IOException {
 
 
         Puzzle puzzle = new Puzzle();
 
+        // we set the initial configuration
         puzzle.getTab()[0][0] = 15;
         puzzle.getTab()[0][1] = 11;
         puzzle.getTab()[0][2] = 7;
@@ -26,17 +29,30 @@ public class Main {
 
 
         Node node = new Node(puzzle);
+        Node solutionWhichFind;
+        Puzzle finishSolution = Node.shufflePuzzle(node.puz);
 
+        solutionWhichFind = FindSolution.viewSolution(puzzle, finishSolution, node);
 
+        // optional, to see what is happening in the console
+        {
+            System.out.println("initial configuration: ");
+            puzzle.print();
+            if (puzzle.isSolvable()) {
+                System.out.println("solution: ");
+                solutionWhichFind.puz.print();
+            }
+            System.out.println();
+        }
 
-        node.add(node);
-        node.add(node);
+        WriteToFile.saveToFile(puzzle, solutionWhichFind);
 
-        Node.traverseInOrder(node);
-
-
+        // optional, to see what is happening in the console
+        {
+            System.out.println("list of moves: ");
+            for (Move move : Node.listOfMoves) {
+                System.out.println(move);
+            }
+        }
     }
-
-
-
 }
